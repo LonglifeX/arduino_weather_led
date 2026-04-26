@@ -137,7 +137,16 @@ void showCloud(unsigned long durationMs) {
 void scrollText(const char* text) {
     matrix.beginDraw();
     matrix.stroke(0xFFFFFFFF);
-    matrix.textScrollSpeed(500);
+    matrix.textFont(Font_5x7);
+    matrix.beginText(0, 1, 0xFFFFFF);
+    matrix.print(text);
+    matrix.endText();
+    matrix.endDraw();
+    delay(3000);
+
+    matrix.beginDraw();
+    matrix.stroke(0xFFFFFFFF);
+    matrix.textScrollSpeed(100);
     matrix.textFont(Font_5x7);
     matrix.beginText(0, 1, 0xFFFFFF);
     matrix.print(text);
@@ -149,6 +158,7 @@ void showWeatherDisplay() {
     char buf[16];
     char tmp[8];
 
+    showCloud(CLOUD_DURATION_MS);
     // Temperature, e.g. "18.5C"
     dtostrf(temperature, 1, 1, tmp);
     snprintf(buf, sizeof(buf), "%sC", tmp);
@@ -161,7 +171,7 @@ void showWeatherDisplay() {
     // Wind speed, e.g. "12km/h"
     snprintf(buf, sizeof(buf), "%dkm/h", (int)lroundf(windSpeed));
     scrollText(buf);
-    showCloud(CLOUD_DURATION_MS);
+
 }
 
 void setup() {
