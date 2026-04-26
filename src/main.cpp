@@ -4,10 +4,7 @@
 #include <ArduinoGraphics.h>
 #include <Arduino_LED_Matrix.h>
 #include "arduino_secrets.h"
-
-// Adjust GPS coordinates
-#define LATITUDE  "51.3397"   // Leipzig
-#define LONGITUDE "12.3731"
+#include "location_config.h"
 
 #define FETCH_INTERVAL_MS (15UL * 60UL * 1000UL)
 #define CLOUD_DURATION_MS  5000UL

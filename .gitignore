@@ -69,3 +69,7 @@ Testing/
 .cache/
 /.pio/
 /.idea/
+
+# Private configuration — copy the .example files and fill in your values
+/include/arduino_secrets.h
+/include/location_config.h
