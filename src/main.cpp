@@ -5,7 +5,7 @@
 #include <Arduino_LED_Matrix.h>
 #include "arduino_secrets.h"
 
-// GPS-Koordinaten anpassen
+// Adjust GPS coordinates
 #define LATITUDE  "51.3397"   // Leipzig
 #define LONGITUDE "12.3731"
 
@@ -34,23 +34,23 @@ unsigned long lastFetch = 0;
 
 void connectWifi() {
     if (WiFi.status() == WL_NO_MODULE) {
-        Serial.println("WiFi-Modul nicht gefunden!");
+        Serial.println("WiFi module not found!");
         while (true) {}
     }
     while (WiFi.status() != WL_CONNECTED) {
-        Serial.print("Verbinde mit "); Serial.println(ssid);
+        Serial.print("Connecting to "); Serial.println(ssid);
         WiFi.begin(ssid, pass);
         delay(10000);
     }
-    Serial.print("WiFi verbunden. IP: "); Serial.println(WiFi.localIP());
+    Serial.print("WiFi connected. IP: "); Serial.println(WiFi.localIP());
 }
 
 void fetchWeather() {
-    Serial.println("\n=== Wetterdaten ===");
+    Serial.println("\n=== Weather Data ===");
     if (WiFi.status() != WL_CONNECTED) connectWifi();
 
     if (!client.connect(API_HOST, 80)) {
-        Serial.println("Verbindung fehlgeschlagen.");
+        Serial.println("Connection failed.");
         return;
     }
 
@@ -74,22 +74,22 @@ void fetchWeather() {
     DeserializationError err = deserializeJson(doc, client);
     client.stop();
 
-    if (err) { Serial.print("JSON-Fehler: "); Serial.println(err.c_str()); return; }
+    if (err) { Serial.print("JSON error: "); Serial.println(err.c_str()); return; }
 
     JsonObject cur = doc["current"];
     temperature = cur["temperature_2m"].as<float>();
     humidity    = cur["relative_humidity_2m"].as<int>();
     windSpeed   = cur["wind_speed_10m"].as<float>();
 
-    Serial.print("Temperatur:       "); Serial.print(temperature); Serial.println(" °C");
-    Serial.print("Luftfeuchtigkeit: "); Serial.print(humidity);    Serial.println(" %");
-    Serial.print("Windgeschw.:      "); Serial.print(windSpeed);   Serial.println(" km/h");
+    Serial.print("Temperature:  "); Serial.print(temperature); Serial.println(" °C");
+    Serial.print("Humidity:     "); Serial.print(humidity);    Serial.println(" %");
+    Serial.print("Wind speed:   "); Serial.print(windSpeed);   Serial.println(" km/h");
 }
 
-// ── LED-Matrix ──────────────────────────────────────────────────────────────
+// ── LED Matrix ──────────────────────────────────────────────────────────────
 //
-// 12×8-Matrix: LED(row,col) → Bit 95-(row*12+col) im 96-Bit-Wert
-// frame[0]=Bits 95-64, frame[1]=Bits 63-32, frame[2]=Bits 31-0
+// 12×8 matrix: LED(row,col) → bit 95-(row*12+col) in the 96-bit value
+// frame[0]=bits 95-64, frame[1]=bits 63-32, frame[2]=bits 31-0
 static void setPixel(uint32_t f[3], int col, int row, bool on) {
     if (col < 0 || col > 11 || row < 0 || row > 7) return;
     int bit = 95 - (row * 12 + col);
@@ -99,16 +99,16 @@ static void setPixel(uint32_t f[3], int col, int row, bool on) {
     else    f[idx] &= ~(1UL << pos);
 }
 
-// 4 Animations-Frames: [0] Wolke, [1-3] Regen wandert nach unten
+// 4 animation frames: [0] cloud body, [1-3] rain drops moving downward
 static uint32_t cloudFrames[CLOUD_FRAMES][3];
 
 static void buildCloudFrames() {
     const int rainCols[] = { 2, 6, 9 };
 
-    for (int fr = 0; fr < CLOUD_FRAMES; fr++) {
+     for (int fr = 0; fr < CLOUD_FRAMES; fr++) {
         cloudFrames[fr][0] = cloudFrames[fr][1] = cloudFrames[fr][2] = 0;
 
-        // Wolkenkörper (Reihen 0-4)
+        // Cloud body (rows 0-4)
         setPixel(cloudFrames[fr], 4, 0, true);
         setPixel(cloudFrames[fr], 5, 0, true);
         for (int c = 3; c <= 6; c++) setPixel(cloudFrames[fr], c, 1, true);
@@ -117,7 +117,7 @@ static void buildCloudFrames() {
         for (int c = 0; c <= 10; c++) setPixel(cloudFrames[fr], c, 4, true);
     }
 
-    // Regen-Frames 1-3: Tropfen wandern von Reihe 5 → 7
+    // Rain frames 1-3: drops move from row 5 → 7
     for (int drop = 0; drop < 3; drop++) {
         for (int row = 5; row <= 7; row++) {
             setPixel(cloudFrames[row - 4], rainCols[drop], row, true);
@@ -152,16 +152,16 @@ void showWeatherDisplay() {
     char buf[16];
     char tmp[8];
 
-    // Temperatur, z.B. "18.5C"
+    // Temperature, e.g. "18.5C"
     dtostrf(temperature, 1, 1, tmp);
     snprintf(buf, sizeof(buf), "%sC", tmp);
     scrollText(buf);
 
-    // Luftfeuchtigkeit, z.B. "65%"
+    // Humidity, e.g. "65%"
     snprintf(buf, sizeof(buf), "%d%%", humidity);
     scrollText(buf);
 
-    // Windgeschwindigkeit, z.B. "12km/h"
+    // Wind speed, e.g. "12km/h"
     snprintf(buf, sizeof(buf), "%dkm/h", (int)lroundf(windSpeed));
     scrollText(buf);
     showCloud(CLOUD_DURATION_MS);
