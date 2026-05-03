@@ -11,7 +11,7 @@ Every 15 minutes the board fetches current conditions from the [Open-Meteo](http
 
 ## Prerequisites
 
-- [PlatformIO](https://platformio.org/) (CLI or VS Code extension)
+- [PlatformIO](https://platformio.org/) (CLI or VS Code extension, Clion ...)
 - WiFi network with internet access
 
 ## Setup
